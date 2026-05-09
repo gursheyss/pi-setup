@@ -10,5 +10,6 @@
     "npm:@plannotator/pi-extension"
   ],
   "defaultThinkingLevel": "low",
-  "hideThinkingBlock": false
+  "hideThinkingBlock": false,
+  "theme": "aura-dark"
 }
