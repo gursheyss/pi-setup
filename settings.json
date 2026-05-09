@@ -1,0 +1,14 @@
+{
+  "lastChangelogVersion": "0.73.1",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
+  "packages": [
+    "npm:pi-websearch-parallel",
+    "npm:@anthnykr/pi-codex-fast-mode",
+    "npm:pi-mcp-adapter",
+    "npm:pi-goal",
+    "npm:@plannotator/pi-extension"
+  ],
+  "defaultThinkingLevel": "low",
+  "hideThinkingBlock": false
+}

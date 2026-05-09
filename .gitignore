@@ -1,0 +1,17 @@
+# Secrets / auth
+auth.json
+mcp-oauth/
+
+# Local runtime/session state
+sessions/
+state/
+mcp-cache.json
+mcp-onboarding.json
+executor-sidecars.json
+
+# Downloaded binaries
+bin/
+
+# OS/editor noise
+.DS_Store
+*.swp

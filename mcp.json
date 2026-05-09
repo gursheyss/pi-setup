@@ -1,0 +1,29 @@
+{
+  "imports": [
+    "cursor",
+    "claude-code",
+    "claude-desktop"
+  ],
+  "mcpServers": {
+    "grep": {
+      "url": "https://mcp.grep.app",
+      "directTools": true
+    },
+    "cloudflare": {
+      "url": "https://mcp.cloudflare.com/mcp",
+      "directTools": true
+    },
+    "planetscale": {
+      "url": "https://mcp.pscale.dev/mcp/planetscale",
+      "directTools": true
+    },
+    "axiom": {
+      "url": "https://mcp.axiom.co/mcp",
+      "directTools": true
+    }, 
+    "sentry": {
+      "url": "https://mcp.sentry.dev/mcp",
+      "directTools": true
+    } 
+  }
+}
