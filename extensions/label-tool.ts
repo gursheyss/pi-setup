@@ -1,41 +1,83 @@
-import { defineTool, type ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { complete } from "@mariozechner/pi-ai";
+import { defineTool, type ExtensionAPI, type ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Type } from "typebox";
 
-function titleFromPrompt(prompt: string): string {
+const SUMMARY_PROMPT =
+	"Summarize the user's request in 5-10 words max. Output ONLY the summary, nothing else. No quotes, no punctuation at the end.";
+const SESSION_NAME_PROVIDER = "openai-codex";
+const SESSION_NAME_MODEL_ID = "gpt-5.4-mini";
+
+function fallbackTitle(prompt: string): string {
 	const cleaned = prompt
 		.replace(/```[\s\S]*?```/g, " ")
 		.replace(/`[^`]*`/g, " ")
 		.replace(/https?:\/\/\S+/g, " ")
-		.replace(/[^\p{L}\p{N}\s/_-]/gu, " ")
 		.replace(/\s+/g, " ")
 		.trim();
 
-	if (!cleaned) return "New Session";
+	return cleaned.slice(0, 60).trim() || "New Session";
+}
 
-	const words = cleaned.split(" ").slice(0, 6);
-	const title = words.join(" ");
-	return title.length > 60 ? `${title.slice(0, 57).trim()}...` : title;
+async function summarizeWithModel(
+	ctx: ExtensionContext,
+	model: NonNullable<ExtensionContext["model"]>,
+	prompt: string,
+): Promise<string | undefined> {
+	const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
+	if (!auth.ok) return undefined;
+
+	try {
+		const response = await complete(
+			model,
+			{
+				systemPrompt: SUMMARY_PROMPT,
+				messages: [{ role: "user", content: [{ type: "text", text: prompt }], timestamp: Date.now() }],
+			},
+			{ apiKey: auth.apiKey, headers: auth.headers },
+		);
+
+		const summary = response.content
+			.filter((content): content is { type: "text"; text: string } => content.type === "text")
+			.map((content) => content.text)
+			.join("")
+			.trim()
+			.replace(/[.!?]+$/, "");
+
+		return summary || undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+async function summarizePrompt(ctx: ExtensionContext, prompt: string): Promise<string | undefined> {
+	const preferredModel = ctx.modelRegistry.find(SESSION_NAME_PROVIDER, SESSION_NAME_MODEL_ID);
+	if (preferredModel) {
+		const summary = await summarizeWithModel(ctx, preferredModel, prompt);
+		if (summary) return summary;
+	}
+
+	if (!ctx.model || ctx.model === preferredModel) return undefined;
+	return summarizeWithModel(ctx, ctx.model, prompt);
 }
 
 export default function labelToolExtension(pi: ExtensionAPI) {
-	pi.on("before_agent_start", async (event) => {
-		if (pi.getSessionName()) return;
-		pi.setSessionName(titleFromPrompt(event.prompt));
+	let named = false;
+
+	pi.on("session_start", () => {
+		named = !!pi.getSessionName();
 	});
 
-	pi.registerCommand("name", {
-		description: "Set or show the current session name (usage: /name [new name])",
-		handler: async (args, ctx) => {
-			const name = args.trim();
-			if (!name) {
-				const current = pi.getSessionName();
-				ctx.ui.notify(current ? `Session: ${current}` : "No session name set", "info");
-				return;
-			}
+	pi.on("input", async (event, ctx) => {
+		if (named) return;
 
-			pi.setSessionName(name);
-			ctx.ui.notify(`Session named: ${name}`, "info");
-		},
+		const prompt = event.text.trim();
+		if (!prompt) return;
+
+		named = true;
+		pi.setSessionName(fallbackTitle(prompt));
+
+		const summary = await summarizePrompt(ctx, prompt);
+		if (summary) pi.setSessionName(summary);
 	});
 
 	const setSessionNameTool = defineTool({
@@ -65,6 +107,7 @@ export default function labelToolExtension(pi: ExtensionAPI) {
 			}
 
 			pi.setSessionName(name);
+			named = true;
 
 			return {
 				content: [{ type: "text", text: `Session name set to: ${name}` }],

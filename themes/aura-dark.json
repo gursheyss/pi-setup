@@ -70,7 +70,7 @@
     "syntaxOperator": "purple",
     "syntaxPunctuation": "pink",
 
-    "thinkingOff": "borderMuted",
+    "thinkingOff": "#2d2d2d",
     "thinkingMinimal": "purpleFade",
     "thinkingLow": "purpleSoft",
     "thinkingMedium": "purple",
