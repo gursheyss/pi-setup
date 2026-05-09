@@ -1,53 +1,74 @@
 /**
- * Nudge the agent to read files fully after consecutive search operations.
- * Searching with rg/grep gives snippets — but snippets miss context.
+ * Quiet nudge: after repeated search/navigation without a real read, remind the
+ * agent to read source files with enough context. Quiet mode is model-only.
  */
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 
 const SEARCH_PATTERN = /\b(rg|grep|egrep|fgrep|zgrep|bzgrep|xzgrep|ag|ack|pt|sift|ucg)\b/;
+const READ_PATTERN = /\b(cat|less|more|bat|sed|awk|head|tail)\b/;
+const SEARCH_TOOLS = new Set(["grep", "find", "ls", "search_code", "find_files", "list_dir"]);
+const READ_TOOLS = new Set(["read", "read_code"]);
+
+const SEARCHES_BEFORE_NUDGE = 2;
+
+type Mode = "off" | "quiet" | "strict";
 
 export default function (pi: ExtensionAPI) {
-	let consecutiveSearches = 0;
-	let shouldFire = false;
+	let mode: Mode = "quiet";
+	let searchesSinceRead = 0;
+	let remindedThisRun = false;
+
+	pi.registerCommand("read-reminders", {
+		description: "Set read-full reminder mode: off, quiet, or strict",
+		handler: async (args, ctx) => {
+			const next = args.trim() as Mode;
+			if (!["off", "quiet", "strict"].includes(next)) {
+				ctx.ui.notify(`read-reminders is ${mode}. Usage: /read-reminders off|quiet|strict`, "info");
+				return;
+			}
+			mode = next;
+			ctx.ui.notify(`read-reminders set to ${mode}`, "info");
+		},
+	});
+
+	pi.on("agent_start", async () => {
+		searchesSinceRead = 0;
+		remindedThisRun = false;
+	});
 
 	pi.on("tool_result", async (event) => {
-		let isSearch = false;
+		if (READ_TOOLS.has(event.toolName)) {
+			searchesSinceRead = 0;
+			return;
+		}
 
 		if (event.toolName === "bash") {
 			const cmd = (event.input as any)?.command ?? "";
-			isSearch = SEARCH_PATTERN.test(cmd);
-		}
-		if (event.toolName === "grep" || event.toolName === "find" || event.toolName === "ls") {
-			isSearch = true;
+			if (READ_PATTERN.test(cmd)) {
+				searchesSinceRead = 0;
+				return;
+			}
+			if (SEARCH_PATTERN.test(cmd)) searchesSinceRead++;
+			return;
 		}
 
-		if (isSearch) {
-			consecutiveSearches++;
-			if (consecutiveSearches >= 2) {
-				shouldFire = true;
-				consecutiveSearches = 0;
-			}
-		} else {
-			consecutiveSearches = 0;
-		}
+		if (SEARCH_TOOLS.has(event.toolName)) searchesSinceRead++;
 	});
 
-	pi.on("tool_execution_end", async (_event) => {
-		if (!shouldFire) return;
-		shouldFire = false;
+	pi.on("agent_end", async () => {
+		if (mode === "off") return;
+		if (remindedThisRun) return;
+		if (searchesSinceRead < SEARCHES_BEFORE_NUDGE) return;
+		remindedThisRun = true;
 
 		pi.sendMessage(
 			{
 				customType: "read-fully-steer",
 				content:
-					"Steering reminder: You've been using grep/search commands to read file contents. " +
-					"Grepping and searching is fine for *locating* files, but once you've found them, " +
-					"read the full files start to finish before writing code based on them. " +
-					"Partial reads (grep, head, offset/limit) miss imports, types, control flow, helpers, " +
-					"and the overall shape — all of which matter for writing correct code.",
-				display: true,
+					"Reminder: search/list tools locate files, but snippets miss context. If you are about to answer or edit based on search results, first use read_code/read to inspect the relevant file(s) with enough surrounding context.",
+				display: mode === "strict",
 			},
-			{ deliverAs: "steer", triggerTurn: true },
+			{ deliverAs: "followUp", triggerTurn: true },
 		);
 	});
 }
