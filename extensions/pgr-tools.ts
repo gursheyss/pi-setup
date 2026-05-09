@@ -8,6 +8,15 @@ const EXTRA_PATHS = ["/Users/gursh/.cargo/bin", "/Users/gursh/.pi/agent/bin", "/
 const MAX_OUTPUT_BYTES = 50 * 1024;
 const MAX_OUTPUT_LINES = 2000;
 
+const REPLACED_TOOLS = new Set(["grep", "read", "find", "ls"]);
+const PGR_TOOLS = ["search_code", "read_code", "find_files", "list_dir"];
+
+function enablePgrReplacements(pi: ExtensionAPI) {
+	const activeToolNames = pi.getActiveTools();
+	const next = [...activeToolNames.filter((name) => !REPLACED_TOOLS.has(name)), ...PGR_TOOLS];
+	pi.setActiveTools([...new Set(next)]);
+}
+
 type JsonRpcMessage = {
 	jsonrpc?: string;
 	id?: number | string;
@@ -217,15 +226,15 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("pgr-tools", {
-		description: "Switch active tools to pgr search/read/list plus Pi bash/edit/write",
+		description: "Replace built-in read/grep/find/ls with pgr search/read/list tools, preserving other active tools",
 		handler: async (_args, ctx) => {
-			pi.setActiveTools(["search_code", "read_code", "find_files", "list_dir", "bash", "edit", "write"]);
-			ctx.ui.notify("pgr tools enabled; Pi read/grep/find/ls disabled for this session.", "info");
+			enablePgrReplacements(pi);
+			ctx.ui.notify("pgr tools enabled; only Pi read/grep/find/ls were replaced.", "info");
 		},
 	});
 
 	pi.on("session_start", async (_event, ctx) => {
-		pi.setActiveTools(["search_code", "read_code", "find_files", "list_dir", "bash", "edit", "write"]);
+		enablePgrReplacements(pi);
 		ctx.ui.setStatus("pgr", "pgr tools");
 	});
 }
