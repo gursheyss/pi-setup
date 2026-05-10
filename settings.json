@@ -10,7 +10,7 @@
     "npm:@plannotator/pi-extension",
     "npm:pi-session-search"
   ],
-  "defaultThinkingLevel": "low",
+  "defaultThinkingLevel": "off",
   "hideThinkingBlock": false,
   "theme": "aura-dark",
   "treeFilterMode": "no-tools"
