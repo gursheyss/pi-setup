@@ -1,5 +1,5 @@
-import { complete } from "@mariozechner/pi-ai";
-import { defineTool, type ExtensionAPI, type ExtensionContext } from "@mariozechner/pi-coding-agent";
+import { complete } from "@earendil-works/pi-ai";
+import { defineTool, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 
 const SUMMARY_PROMPT =
@@ -16,6 +16,15 @@ function fallbackTitle(prompt: string): string {
 		.trim();
 
 	return cleaned.slice(0, 60).trim() || "New Session";
+}
+
+function setSessionNameSafely(pi: ExtensionAPI, name: string): string | undefined {
+	try {
+		pi.setSessionName(name);
+		return undefined;
+	} catch (error) {
+		return error instanceof Error ? error.message : String(error);
+	}
 }
 
 async function summarizeWithModel(
@@ -62,22 +71,29 @@ async function summarizePrompt(ctx: ExtensionContext, prompt: string): Promise<s
 
 export default function labelToolExtension(pi: ExtensionAPI) {
 	let named = false;
+	let labelRunId = 0;
 
 	pi.on("session_start", () => {
+		labelRunId += 1;
 		named = !!pi.getSessionName();
 	});
 
-	pi.on("input", async (event, ctx) => {
+	pi.on("input", (event, ctx) => {
 		if (named) return;
 
 		const prompt = event.text.trim();
 		if (!prompt) return;
 
 		named = true;
-		pi.setSessionName(fallbackTitle(prompt));
+		const currentLabelRunId = labelRunId + 1;
+		labelRunId = currentLabelRunId;
+		setSessionNameSafely(pi, fallbackTitle(prompt));
 
-		const summary = await summarizePrompt(ctx, prompt);
-		if (summary) pi.setSessionName(summary);
+		void summarizePrompt(ctx, prompt)
+			.then((summary) => {
+				if (summary && labelRunId === currentLabelRunId) setSessionNameSafely(pi, summary);
+			})
+			.catch(() => undefined);
 	});
 
 	const setSessionNameTool = defineTool({
@@ -106,7 +122,15 @@ export default function labelToolExtension(pi: ExtensionAPI) {
 				};
 			}
 
-			pi.setSessionName(name);
+			labelRunId += 1;
+			const error = setSessionNameSafely(pi, name);
+			if (error) {
+				return {
+					content: [{ type: "text", text: `Failed to set session name: ${error}` }],
+					details: { ok: false, name },
+				};
+			}
+
 			named = true;
 
 			return {
