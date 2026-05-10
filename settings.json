@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.73.1",
+  "lastChangelogVersion": "0.74.0",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
   "packages": [
@@ -7,7 +7,8 @@
     "npm:pi-better-openai",
     "npm:pi-mcp-adapter",
     "npm:pi-goal",
-    "npm:@plannotator/pi-extension"
+    "npm:@plannotator/pi-extension",
+    "npm:pi-session-search"
   ],
   "defaultThinkingLevel": "low",
   "hideThinkingBlock": false,

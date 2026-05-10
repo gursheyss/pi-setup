@@ -15,15 +15,19 @@
     },
     "planetscale": {
       "url": "https://mcp.pscale.dev/mcp/planetscale",
-      "directTools": true
+      "directTools": false
     },
     "axiom": {
       "url": "https://mcp.axiom.co/mcp",
-      "directTools": true
-    }, 
+      "directTools": [
+        "listDatasets",
+        "getDatasetFields",
+        "queryDataset"
+      ]
+    },
     "sentry": {
       "url": "https://mcp.sentry.dev/mcp",
-      "directTools": true
-    } 
+      "directTools": false
+    }
   }
 }
