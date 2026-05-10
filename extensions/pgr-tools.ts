@@ -8,13 +8,24 @@ const EXTRA_PATHS = ["/Users/gursh/.cargo/bin", "/Users/gursh/.pi/agent/bin", "/
 const MAX_OUTPUT_BYTES = 50 * 1024;
 const MAX_OUTPUT_LINES = 2000;
 
-const REPLACED_TOOLS = new Set(["grep", "read", "find", "ls"]);
+const DEFAULT_PI_TOOLS = ["grep", "read", "find", "ls"];
+const DEFAULT_PI_TOOL_SET = new Set(DEFAULT_PI_TOOLS);
 const PGR_TOOLS = ["search_code", "read_code", "find_files", "list_dir"];
+const PGR_TOOL_SET = new Set(PGR_TOOLS);
 
-function enablePgrReplacements(pi: ExtensionAPI) {
+let pgrToolsEnabled = true;
+
+function setPgrToolsEnabled(pi: ExtensionAPI, enabled: boolean) {
+	pgrToolsEnabled = enabled;
 	const activeToolNames = pi.getActiveTools();
-	const next = [...activeToolNames.filter((name) => !REPLACED_TOOLS.has(name)), ...PGR_TOOLS];
+	const next = enabled
+		? [...activeToolNames.filter((name) => !DEFAULT_PI_TOOL_SET.has(name)), ...PGR_TOOLS]
+		: [...activeToolNames.filter((name) => !PGR_TOOL_SET.has(name)), ...DEFAULT_PI_TOOLS];
 	pi.setActiveTools([...new Set(next)]);
+}
+
+function getPgrStatus() {
+	return pgrToolsEnabled ? "enabled" : "disabled";
 }
 
 type JsonRpcMessage = {
@@ -226,15 +237,47 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("pgr-tools", {
-		description: "Replace built-in read/grep/find/ls with pgr search/read/list tools, preserving other active tools",
-		handler: async (_args, ctx) => {
-			enablePgrReplacements(pi);
-			ctx.ui.notify("pgr tools enabled; only Pi read/grep/find/ls were replaced.", "info");
+		description: "Enable, disable, toggle, or show status for pgr tools. Usage: /pgr-tools [enable|disable|toggle|status]",
+		handler: async (args, ctx) => {
+			const action = args.trim().toLowerCase() || "toggle";
+
+			if (["enable", "enabled", "on"].includes(action)) {
+				setPgrToolsEnabled(pi, true);
+				ctx.ui.notify("pgr tools enabled; Pi read/grep/find/ls were replaced.", "info");
+				ctx.ui.setStatus("pgr", "pgr tools");
+				return;
+			}
+
+			if (["disable", "disabled", "off"].includes(action)) {
+				setPgrToolsEnabled(pi, false);
+				ctx.ui.notify("pgr tools disabled; restored default Pi read/grep/find/ls.", "info");
+				ctx.ui.setStatus("pgr", undefined);
+				return;
+			}
+
+			if (action === "toggle") {
+				setPgrToolsEnabled(pi, !pgrToolsEnabled);
+				ctx.ui.notify(
+					pgrToolsEnabled
+						? "pgr tools enabled; Pi read/grep/find/ls were replaced."
+						: "pgr tools disabled; restored default Pi read/grep/find/ls.",
+					"info",
+				);
+				ctx.ui.setStatus("pgr", pgrToolsEnabled ? "pgr tools" : undefined);
+				return;
+			}
+
+			if (action === "status") {
+				ctx.ui.notify(`pgr tools are ${getPgrStatus()}.`, "info");
+				return;
+			}
+
+			ctx.ui.notify("Usage: /pgr-tools [enable|disable|toggle|status]", "warning");
 		},
 	});
 
 	pi.on("session_start", async (_event, ctx) => {
-		enablePgrReplacements(pi);
-		ctx.ui.setStatus("pgr", "pgr tools");
+		setPgrToolsEnabled(pi, pgrToolsEnabled);
+		ctx.ui.setStatus("pgr", pgrToolsEnabled ? "pgr tools" : undefined);
 	});
 }
