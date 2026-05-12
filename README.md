@@ -7,15 +7,6 @@ config
 - aura-dark theme
 - ctrl+enter sends follow up messages
 
-tools
-
-i replaced the default pi read/grep/find/ls tools with [pgr](https://github.com/entireio/pgr) to experiment and see if it works better
-
-- search_code: search code
-- read_code: read files with line numbers and ranges
-- find_files: find files by name, glob, or type
-- list_dir: list folders
-
 mcps
 - grep for github code search
 - cloudflare for cloudflare api access
