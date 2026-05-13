@@ -28,6 +28,9 @@
     "sentry": {
       "url": "https://mcp.sentry.dev/mcp",
       "directTools": false
+    },
+    "linear": {
+      "url": "https://mcp.linear.app/mcp"
     }
   }
 }
