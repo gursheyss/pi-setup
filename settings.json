@@ -5,7 +5,7 @@
   "hideThinkingBlock": false,
   "lastChangelogVersion": "0.74.0",
   "packages": [
-    "npm:pi-websearch-parallel",
+    "npm:@parallel-web/pi-extension",
     "npm:pi-better-openai",
     "npm:pi-mcp-adapter",
     "npm:pi-goal",
