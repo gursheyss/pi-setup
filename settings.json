@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.74.0",
+  "lastChangelogVersion": "0.74.1",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
   "packages": [
@@ -11,8 +11,8 @@
     "npm:pi-session-search",
     "git:https://github.com/badlogic/pi-diff-review"
   ],
-  "defaultThinkingLevel": "low",
-  "hideThinkingBlock": true,
+  "defaultThinkingLevel": "minimal",
+  "hideThinkingBlock": false,
   "theme": "aura-dark",
   "treeFilterMode": "no-tools"
 }

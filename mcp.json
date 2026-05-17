@@ -28,6 +28,17 @@
     "sentry": {
       "url": "https://mcp.sentry.dev/mcp",
       "directTools": false
+    },
+    "linear": {
+      "url": "https://mcp.linear.app/mcp"
+    },
+    "agent-device": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "agent-device@0.14.9",
+        "mcp"
+      ]
     }
   }
 }
