@@ -1,21 +1,18 @@
 {
-  "defaultModel": "gpt-5.5",
-  "defaultProvider": "openai-codex",
-  "defaultThinkingLevel": "low",
-  "hideThinkingBlock": false,
   "lastChangelogVersion": "0.74.0",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
   "packages": [
-    "npm:@parallel-web/pi-extension",
+    "npm:pi-websearch-parallel",
     "npm:pi-better-openai",
     "npm:pi-mcp-adapter",
     "npm:pi-goal",
     "npm:@plannotator/pi-extension",
     "npm:pi-session-search",
-    "https://github.com/mitsuhiko/pi-ds4",
-    "npm:@catdaemon/pi-cmux",
-    "git:https://github.com/badlogic/pi-diff-review",
-    "/Users/gursh/.vibe-island/pi-extension"
+    "git:https://github.com/badlogic/pi-diff-review"
   ],
+  "defaultThinkingLevel": "low",
+  "hideThinkingBlock": true,
   "theme": "aura-dark",
   "treeFilterMode": "no-tools"
 }

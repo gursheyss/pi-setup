@@ -15,7 +15,7 @@ mcps
 - sentry for error tracking
 
 extensions
-- [@parallel-web/pi-extension](https://www.npmjs.com/package/@parallel-web/pi-extension): most effective web search ive found
+- [pi-websearch-parallel](https://www.npmjs.com/package/pi-websearch-parallel): most effective web search ive found
 - [pi-better-openai](https://www.npmjs.com/package/pi-better-openai): better openai/codex models, usage, and image generation
 - [pi-mcp-adapter](https://www.npmjs.com/package/pi-mcp-adapter): self explanatory
 - [pi-goal](https://www.npmjs.com/package/pi-goal): implementation of codex's /goal
