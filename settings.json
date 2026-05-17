@@ -11,7 +11,7 @@
     "npm:pi-session-search",
     "git:https://github.com/badlogic/pi-diff-review"
   ],
-  "defaultThinkingLevel": "minimal",
+  "defaultThinkingLevel": "high",
   "hideThinkingBlock": false,
   "theme": "aura-dark",
   "treeFilterMode": "no-tools"
